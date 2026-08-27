@@ -73,6 +73,16 @@ public class BukkitConfig implements Config {
     }
 
     @Override
+    public int getMaxWorkingCount() {
+        return plugin.getConfig().getInt("max-working-count", 0);
+    }
+
+    @Override
+    public void setMaxWorkingCount(final int maxWorkingCount) {
+        plugin.getConfig().set("max-working-count", maxWorkingCount);
+    }
+
+    @Override
     public void reload() {
         plugin.reloadConfig();
     }
