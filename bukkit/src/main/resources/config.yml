@@ -4,3 +4,9 @@ continue-on-restart: false
 force-load-existing-chunks: false
 silent: false
 update-interval: 1
+# Maximum number of chunks each generation task works on concurrently.
+# Higher values let the server generate chunks on more CPU cores at the same
+# time (up to the server's own chunk worker pool size). Recommended values are
+# roughly 4x the number of CPU cores, e.g. 32 for an 8-core server.
+# 0 means "auto" (4 x CPU cores, at least 50).
+max-working-count: 0

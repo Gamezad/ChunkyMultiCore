@@ -119,6 +119,22 @@ public class SpongeConfig implements Config {
     }
 
     @Override
+    public int getMaxWorkingCount() {
+        return this.rootNode == null ? 0 : this.rootNode.node(ROOT_CONFIG_NODE, "max-working-count").getInt(0);
+    }
+
+    @Override
+    public void setMaxWorkingCount(final int maxWorkingCount) {
+        if (this.rootNode != null) {
+            try {
+                this.rootNode.node(ROOT_CONFIG_NODE, "max-working-count").set(maxWorkingCount);
+            } catch (SerializationException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    @Override
     public void reload() {
         try {
             this.rootNode = configLoader.load();

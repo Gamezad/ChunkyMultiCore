@@ -68,9 +68,21 @@ subprojects {
 }
 
 fun commitsSinceLastTag(): String {
-    val tagDescription = providers.exec {
+    val describe = providers.exec {
         commandLine("git", "describe", "--tags")
-    }.standardOutput.asText.get()
+        isIgnoreExitValue = true
+    }
+    if (describe.result.get().exitValue != 0) {
+        val revList = providers.exec {
+            commandLine("git", "rev-list", "--count", "HEAD")
+            isIgnoreExitValue = true
+        }
+        if (revList.result.get().exitValue != 0) {
+            return "0"
+        }
+        return revList.standardOutput.asText.get().trim().ifEmpty { "0" }
+    }
+    val tagDescription = describe.standardOutput.asText.get()
     if (tagDescription.indexOf('-') < 0) {
         return "0"
     }

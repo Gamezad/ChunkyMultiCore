@@ -22,7 +22,7 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class GenerationTask implements Runnable {
-    private static final int MAX_WORKING_COUNT = Input.tryInteger(System.getProperty("chunky.maxWorkingCount")).orElse(50);
+    private static final int DEFAULT_MAX_WORKING_COUNT = 50;
     private static final double SAMPLE_INTERVAL = 1000d * Math.max(Input.tryInteger(System.getProperty("chunky.sampleInterval")).orElse(30), 30);
     private static final double SAMPLE_SUB_INTERVAL = SAMPLE_INTERVAL / 30;
     private final Chunky chunky;
@@ -53,6 +53,21 @@ public class GenerationTask implements Runnable {
         this.shape = ShapeFactory.getShape(selection);
         this.progress = new Progress(selection.world().getName());
         this.worldState = chunky.getRegionCache().getWorld(selection.world().getName());
+    }
+
+    /**
+     * The maximum number of chunks this task works on concurrently. The system property
+     * "chunky.maxWorkingCount" takes priority, followed by the config option "max-working-count".
+     * A configured value less than 1 means "auto": the concurrency scales with the number of
+     * available CPU cores so that the server's chunk workers are kept busy on all cores.
+     */
+    private int maxWorkingCount() {
+        int working = Input.tryInteger(System.getProperty("chunky.maxWorkingCount"))
+                .orElse(chunky.getConfig().getMaxWorkingCount());
+        if (working < 1) {
+            working = Math.max(4 * Runtime.getRuntime().availableProcessors(), DEFAULT_MAX_WORKING_COUNT);
+        }
+        return working;
     }
 
     private synchronized void update(final int chunkX, final int chunkZ, final boolean loaded) {
@@ -121,7 +136,7 @@ public class GenerationTask implements Runnable {
         if (!chunkIterator.process()) {
             stop(true);
         }
-        final Semaphore working = new Semaphore(MAX_WORKING_COUNT);
+        final Semaphore working = new Semaphore(maxWorkingCount());
         final boolean forceLoadExistingChunks = chunky.getConfig().isForceLoadExistingChunks();
         startTime.set(System.currentTimeMillis());
         while (!stopped && chunkIterator.hasNext()) {

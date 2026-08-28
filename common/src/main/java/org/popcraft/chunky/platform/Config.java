@@ -21,5 +21,13 @@ public interface Config {
 
     void setUpdateInterval(int updateInterval);
 
+    /**
+     * Maximum number of chunks a generation task works on concurrently.
+     * A value less than 1 means "auto", which scales with available CPU cores.
+     */
+    int getMaxWorkingCount();
+
+    void setMaxWorkingCount(int maxWorkingCount);
+
     void reload();
 }
